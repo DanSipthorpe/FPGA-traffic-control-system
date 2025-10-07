@@ -1,0 +1,38 @@
+module traffic_fsm_tb;
+
+    logic clk, reset, TA, TB;
+    logic [2:0] LA, LB;
+
+    // DUT
+    traffic_fsm_moore dut (.clk(clk), .reset(reset), .TA(TA), .TB(TB), .LA(LA), .LB(LB));
+
+    // Clock generation (10ns period)
+    always #5 clk = ~clk;
+
+    initial begin
+        // init
+        clk = 0; reset = 1; TA = 1; TB = 0;
+        #20 reset = 0;
+
+        // Case 1: traffic present on Academic → stay green
+        TA = 1; TB = 0;
+        repeat(10) @(posedge clk);
+        $display("State with TA=1: LA=%b LB=%b", LA, LB);
+
+        // Case 2: no traffic on Academic → should go yellow then Bravado green
+        TA = 0;
+        repeat(15) @(posedge clk);
+        $display("Transitioned to Bravado Green: LA=%b LB=%b", LA, LB);
+
+        // Case 3: traffic on Bravado → stay green
+        TB = 1;
+        repeat(10) @(posedge clk);
+
+        // Case 4: no traffic on Bravado → switch back to Academic green
+        TB = 0;
+        repeat(20) @(posedge clk);
+        $display("Back to Academic Green: LA=%b LB=%b", LA, LB);
+
+        $stop;
+    end
+endmodule
